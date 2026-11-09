@@ -64,7 +64,7 @@
 
 ## 四、直接调用示例
 
-可从公开仓库 https://github.com/qqqandmc520/product-de-hiring 安装并保留Git关联，具体命令见仓库README；查看、HTTPS克隆和拉取更新无需GitHub登录。本机技能目录通常为`~/.codex/skills/product-de-hiring/`，新会话中可尝试以下调用；若列表尚未刷新，重新打开会话。也可解压分发包，将完整文件夹放入目标技能目录。已有同名技能时先核对并备份本地改动，不直接覆盖。
+可从公开仓库 https://github.com/tc-chaoma/product-de-hiring 安装并保留Git关联，具体命令见仓库README；查看、HTTPS克隆和拉取更新无需GitHub登录。本机技能目录通常为`~/.codex/skills/product-de-hiring/`，新会话中可尝试以下调用；若列表尚未刷新，重新打开会话。也可解压分发包，将完整文件夹放入目标技能目录。已有同名技能时先核对并备份本地改动，不直接覆盖；旧地址安装用户按README切换远端后更新。
 
 **首次筛选：**
 

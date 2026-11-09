@@ -22,7 +22,7 @@
 本仓库公开可读，查看、下载和HTTPS克隆无需登录GitHub，也无需申请仓库访问权限。在目标电脑已配置Git后运行：
 
 ```bash
-git clone https://github.com/qqqandmc520/product-de-hiring.git "$HOME/.codex/skills/product-de-hiring"
+git clone https://github.com/tc-chaoma/product-de-hiring.git "$HOME/.codex/skills/product-de-hiring"
 ```
 
 若设置了自定义`CODEX_HOME`，将安装目录改为其`skills/product-de-hiring`。若已有同名技能，先核对本地改动并备份迁移，不直接覆盖；把备份放在技能目录之外，避免被重复发现。更新技能同样无需GitHub登录；修改仓库内容仍需要维护者权限。
@@ -32,6 +32,12 @@ git clone https://github.com/qqqandmc520/product-de-hiring.git "$HOME/.codex/ski
 安装后在新会话使用`$product-de-hiring`。若当前技能列表未刷新，重新打开会话。
 
 ## 拉取更新
+
+仓库现地址为 `https://github.com/tc-chaoma/product-de-hiring`。此前使用旧地址安装的用户，可先切换远端，再拉取更新；不会改写本地工作文件：
+
+```bash
+git -C "$HOME/.codex/skills/product-de-hiring" remote set-url origin https://github.com/tc-chaoma/product-de-hiring.git
+```
 
 ```bash
 git -C "$HOME/.codex/skills/product-de-hiring" pull --ff-only
