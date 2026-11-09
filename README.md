@@ -15,13 +15,13 @@
 
 仓库根目录就是完整技能目录，包含`SKILL.md`、`agents/`、`references/`、`assets/`与`scripts/`。安装保留Git关联，后续可以直接拉取更新。
 
-在目标电脑已配置Git、且已登录有权读取此仓库的GitHub账号后运行（仓库地址取当前页面Code中的HTTPS地址）：
+本仓库公开可读，查看、下载和HTTPS克隆无需登录GitHub，也无需申请仓库访问权限。在目标电脑已配置Git后运行：
 
 ```bash
 git clone https://github.com/qqqandmc520/product-de-hiring.git "$HOME/.codex/skills/product-de-hiring"
 ```
 
-若设置了自定义`CODEX_HOME`，将安装目录改为其`skills/product-de-hiring`。若已有同名技能，先核对本地改动并备份迁移，不直接覆盖；把备份放在技能目录之外，避免被重复发现。私有仓库需要仓库所有者事先授予使用者访问权限。
+若设置了自定义`CODEX_HOME`，将安装目录改为其`skills/product-de-hiring`。若已有同名技能，先核对本地改动并备份迁移，不直接覆盖；把备份放在技能目录之外，避免被重复发现。更新技能同样无需GitHub登录；修改仓库内容仍需要维护者权限。
 
 也可以让Codex操作：“把这个GitHub仓库作为product-de-hiring技能安装，保留Git关联便于后续拉取；若已有安装，先核对并备份迁移。”
 
