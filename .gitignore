@@ -1,0 +1,13 @@
+.DS_Store
+__pycache__/
+*.py[cod]
+.venv/
+.env
+.env.*
+output/
+tmp/
+records/
+candidates/
+候选人/
+简历/
+面试纪要/
