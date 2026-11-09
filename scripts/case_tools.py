@@ -123,10 +123,62 @@ def check(record):
     for tag, item in requirements.items():
         review(tag, item)
 
+    # Optional extension: preserve compatibility with v0.1/v0.2 ledgers.
+    fit = record.get("role_fit")
+    if fit is None:
+        warnings.append("旧记录未含role_fit；接续评估时补岗位属性与产品/业务适配，不自动改写历史结论")
+    elif not isinstance(fit, dict):
+        error("role_fit须为对象")
+    else:
+        orientation = fit.get("role_orientation")
+        if orientation not in {"product_led", "business_led", "hybrid", "undetermined"}:
+            error("role_fit岗位属性无效")
+        elif orientation != "undetermined" and not nonempty(fit.get("role_basis")):
+            error("role_fit已判断岗位属性须有role_basis")
+        if fit.get("candidate_evidence_focus") not in {"product", "business", "both", "insufficient"}:
+            error("role_fit候选人证据侧重无效")
+        for axis in ("product_fit", "domain_fit"):
+            item = fit.get(axis)
+            if not isinstance(item, dict):
+                error(f"role_fit.{axis}须为对象")
+                continue
+            status = item.get("status")
+            allowed = STATUSES | ({"not_required"} if axis == "domain_fit" else set())
+            if status not in allowed:
+                error(f"role_fit.{axis}状态无效")
+            refs = item.get("evidence_ids")
+            if not isinstance(refs, list) or any(e not in evidence for e in refs):
+                error(f"role_fit.{axis}证据引用无效")
+                continue
+            if status != "unobserved" and not nonempty(item.get("rationale")):
+                error(f"role_fit.{axis}已有判断须有rationale")
+            if status in {"supported", "partial", "gap"} and not refs:
+                error(f"role_fit.{axis}已有能力判断须引用证据")
+            if axis == "product_fit" and status in {"supported", "partial", "gap"} and refs:
+                linked = [evidence[e] for e in refs]
+                if not any(CAPS.intersection(e.get("capabilities", [])) for e in linked):
+                    error("产品适配不能只引用独立业务要求证据")
+            relevant = [evidence[e] for e in refs if axis != "product_fit" or CAPS.intersection(evidence[e].get("capabilities", []))]
+            if status == "supported" and refs and not any(
+                e.get("direction") == "support" and e.get("prompting") != "leading"
+                for e in relevant
+            ):
+                error(f"role_fit.{axis}缺少非诱导支持证据")
+            if status == "gap" and refs and not any(
+                e.get("direction") == "concern" and e.get("prompting") != "leading"
+                for e in relevant
+            ):
+                error(f"role_fit.{axis}缺少非诱导问题证据")
+
     decisions = record.get("decisions")
     if not isinstance(decisions, list):
         error("decisions须为列表")
         decisions = []
+    if decisions and isinstance(fit, dict):
+        if fit.get("role_orientation") == "undetermined":
+            warnings.append("岗位属性尚不明确；请核对去留结论是否超出当前依据")
+        if not nonempty(fit.get("scope_note")):
+            warnings.append("role_fit尚未说明产品/业务判断范围与局限scope_note")
     verdicts = {"screening": {"invite", "pending_evidence", "do_not_invite"}, "post_interview": {"advance", "supplement", "do_not_advance"}}
     for decision in decisions:
         if not isinstance(decision, dict):
