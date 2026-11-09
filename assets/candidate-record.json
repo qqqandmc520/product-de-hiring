@@ -16,6 +16,11 @@
     "P7": {"status": "unobserved", "evidence_ids": [], "rationale": "", "opportunity": "", "follow_up": ""}
   },
   "role_requirements": [],
+  "hiring_priorities": {
+    "role_version": "",
+    "requirements": [],
+    "assessments": []
+  },
   "role_fit": {
     "role_orientation": "undetermined",
     "role_basis": "",

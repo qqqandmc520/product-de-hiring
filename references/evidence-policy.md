@@ -1,4 +1,4 @@
-# 共用证据与判断口径（招聘应用v0.3；沿用四类证据状态）
+# 共用证据与判断口径（招聘应用v0.4；沿用四类证据状态）
 
 ## 最小记录
 
@@ -13,6 +13,27 @@
 - 能力标签：P1–P7；额外任职要求用`R:`前缀，例如`R:growth`。一条证据可相关多项，但每项须解释具体支持范围。
 
 岗位额外要求表同样记证据、缺口和状态；不要只评七项而漏掉用户明确的DAU等职责。一个真实项目的多条证据不意味着有多个独立案例。
+
+## 要求分层与证据分别接续
+
+依据 `role-priorities.md`，在可读岗位画像建立H:要求表；新JSON记录用可选兼容字段 `hiring_priorities`。用户不需要填JSON，报告必须独立可读。层级不是证据状态，也不是能力分数。
+
+- `role_version`：对应当前岗位画像版本；不能将新版标准无声套入旧记录。
+- `requirements`：同岗同版共享的要求快照，每项含 `id`（H:）、`name`、`level`（core/required/developable/bonus）、`capabilities`（关联P1–P7或已定义R:）、`reason`（层级理由）、`minimum`（最低可接受表现）、`verification`（验证任务/证据）、`basis`（岗位来源及暂定说明）。可培养项另记 `development_plan`：支持资源、节点、验收和未补齐影响；尚待确认须说明，不编承诺。
+- `assessments`：本候选人本轮的逐要求判断，每项含 `requirement_id`、`status`、`evidence_ids`、`rationale`、`opportunity`、`follow_up`。沿用四类状态，引用证据须与该要求关联的P/R至少一项相符；人工仍须判断证据是否支持完整最低表现，不因标签相符自动支持。`rationale`说明反证及对当前阶段建议的影响。
+- 当前 `decisions` 可用 `requirement_ids` 关联决定性H:要求；`interview_plan.segments` 可用同字段关联观察任务。一段内的多个要求不重复计时；标了ID不代表深度足够或已经观察。
+
+示例为虚构片段，仅说明结构：
+
+```json
+{
+  "role_version": "v1",
+  "requirements": [{"id": "H:result", "name": "变更后的结果确认与继续任务", "level": "core", "capabilities": ["P1", "P5", "P6"], "reason": "当前主要用户失败发生在部分变更后", "minimum": "能区分实际生效与未完成范围，让用户理解并继续或纠错", "verification": "真实案例走查加部分失败场景；不指定唯一界面", "basis": "岗位说明第2段；暂定待部门反馈"}],
+  "assessments": [{"requirement_id": "H:result", "status": "unobserved", "evidence_ids": [], "rationale": "本轮材料未涉及，不作为能力缺口", "opportunity": "尚无实际问答", "follow_up": "安排关键操作走查；当前阶段建议另据已有线索解释"}]
+}
+```
+
+该对象放入 `hiring_priorities`，不替代七项及独立要求评估。旧记录没有此字段只提醒接续，不自动补写历史优先级。检查器校验版本、枚举、ID、证据引用和时间合计，对否定建议只关联可培养/加分、核心未安排等发人工复核提醒，不自动改变去留、不要求所有核心supported，也不能判断实际提问深度是否充分。
 
 ## 岗位属性与产品核心适配记录
 

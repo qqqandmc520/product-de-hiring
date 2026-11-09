@@ -85,7 +85,7 @@ def check(record):
     if set(capabilities) != CAPS:
         error("必须保留P1–P7且不能增加第八项；额外要求放role_requirements")
 
-    def review(tag, item):
+    def review(tag, item, matching_tags=None):
         if not isinstance(item, dict):
             error(f"{tag}评估必须是对象")
             return
@@ -99,7 +99,7 @@ def check(record):
         for eid in refs:
             if eid not in evidence:
                 error(f"{tag}引用不存在的证据：{eid}")
-            elif tag not in evidence[eid].get("capabilities", []):
+            elif not set(matching_tags or [tag]).intersection(evidence[eid].get("capabilities", [])):
                 error(f"{tag}引用证据{eid}但证据未标注该能力/要求")
         linked = [evidence[e] for e in refs if e in evidence]
         if status != "unobserved":
@@ -122,6 +122,58 @@ def check(record):
         review(tag, item)
     for tag, item in requirements.items():
         review(tag, item)
+
+    # Role standards and candidate evidence remain separate. H: indexes tasks,
+    # never adds a capability or supplies an automatic hiring threshold.
+    priorities = record.get("hiring_priorities")
+    hiring, assessments = {}, {}
+    if priorities is None:
+        warnings.append("旧记录未含hiring_priorities；按原岗位依据接续分层，不追溯改写历史标准或结论")
+    elif not isinstance(priorities, dict):
+        error("hiring_priorities须为对象")
+    else:
+        if priorities.get("role_version") != record.get("role_version"):
+            error("hiring_priorities岗位版本须与当前记录一致，不自动套用新标准")
+        hiring = index(priorities.get("requirements"), "hiring_priorities.requirements")
+        if not hiring:
+            warnings.append("尚未记录要求分层；应按岗位依据提炼，不能从候选人强弱倒定标准")
+        for hid, item in hiring.items():
+            if not hid.startswith("H:") or len(hid) <= 2:
+                error(f"招聘要求ID应以H:开头且有名称：{hid}")
+            for field in ("name", "reason", "minimum", "verification", "basis"):
+                if not nonempty(item.get(field)):
+                    error(f"招聘要求{hid}缺少{field}")
+            if item.get("level") not in {"core", "required", "developable", "bonus"}:
+                error(f"招聘要求{hid}层级无效")
+            tags = item.get("capabilities")
+            if not isinstance(tags, list) or not tags or any(t not in valid_tags for t in tags):
+                error(f"招聘要求{hid}关联能力/独立要求无效")
+            if item.get("level") == "developable" and not nonempty(item.get("development_plan")):
+                warnings.append(f"可培养要求{hid}未说明支持、节点与验收；不能假定自然补齐")
+        priority_fit = record.get("role_fit")
+        if isinstance(priority_fit, dict) and priority_fit.get("role_orientation") == "product_led" and hiring:
+            if not any(i.get("level") == "core" and isinstance(i.get("capabilities"), list) and CAPS.intersection(i["capabilities"]) for i in hiring.values()):
+                warnings.append("产品主导岗位未记录关联产品能力的核心要求，请核对招聘定位")
+        raw_assessments = priorities.get("assessments")
+        if not isinstance(raw_assessments, list):
+            error("hiring_priorities.assessments须为列表")
+        else:
+            for item in raw_assessments:
+                if not isinstance(item, dict):
+                    error("招聘要求评估须为对象")
+                    continue
+                hid = item.get("requirement_id")
+                if not isinstance(hid, str) or hid not in hiring:
+                    error("招聘要求评估引用不存在的H:要求")
+                    continue
+                if hid in assessments:
+                    error(f"招聘要求评估重复：{hid}")
+                assessments[hid] = item
+                mapped_tags = hiring[hid].get("capabilities")
+                review(hid, item, mapped_tags if isinstance(mapped_tags, list) else [])
+        for hid, item in hiring.items():
+            if item.get("level") in {"core", "required"} and hid not in assessments:
+                warnings.append(f"关键/必需要求{hid}尚无本轮评估；不代表能力缺口")
 
     # Optional extension: preserve compatibility with v0.1/v0.2 ledgers.
     fit = record.get("role_fit")
@@ -194,13 +246,27 @@ def check(record):
             error("决策证据引用无效")
         elif not refs and decision.get("verdict") not in {"pending_evidence", "supplement"}:
             error("实质去留建议须引用证据")
+        hids = decision.get("requirement_ids")
+        if decision.get("role_version") == record.get("role_version"):
+            if hids is None:
+                if hiring:
+                    warnings.append("当前决策未关联H:要求，请人工核对最低表现与阶段影响")
+            elif not isinstance(hids, list) or any(not isinstance(h, str) or h not in hiring for h in hids):
+                error("当前决策的requirement_ids引用无效")
+            elif decision.get("verdict") in {"do_not_invite", "do_not_advance"} and hids:
+                decisive = [h for h in hids if hiring[h].get("level") in {"core", "required"}]
+                if not decisive:
+                    warnings.append("否定建议仅关联可培养/加分要求；请核对是否误作淘汰条件")
+                elif not any(assessments.get(h, {}).get("status") == "gap" for h in decisive):
+                    warnings.append("否定建议关联的核心/必需要求尚无gap；请区分材料不足与已知不匹配，人工核对阶段理由")
+        # Historical decisions retain their own role version and requirement IDs.
 
     plan = record.get("interview_plan")
     if plan is not None:
         if not isinstance(plan, dict) or not isinstance(plan.get("segments"), list):
             error("interview_plan须含segments列表")
         else:
-            total, covered = 0, set()
+            total, covered, planned_requirements = 0, set(), set()
             for segment in plan["segments"]:
                 if not isinstance(segment, dict):
                     error("面试时间段须为对象")
@@ -215,11 +281,19 @@ def check(record):
                     error("面试段能力标签无效")
                 else:
                     covered.update(tags)
+                hids = segment.get("requirement_ids", [])
+                if not isinstance(hids, list) or any(not isinstance(h, str) or h not in hiring for h in hids):
+                    error("面试段requirement_ids引用无效")
+                else:
+                    planned_requirements.update(hids)
             target = plan.get("duration_minutes")
             if isinstance(target, bool) or not isinstance(target, (int, float)) or target <= 0 or total != target:
                 error(f"面试时间合计{total}与约定时长{target}不一致")
             if CAPS - covered:
                 warnings.append("面试计划未覆盖：" + ",".join(sorted(CAPS - covered)) + "；应说明后续观察安排")
+            missing_core = {h for h, i in hiring.items() if i.get("level") == "core"} - planned_requirements
+            if missing_core:
+                warnings.append("本轮计划未关联核心要求：" + ",".join(sorted(missing_core)) + "；说明前轮依据或后续安排，标签不代表已充分观察")
     return errors, warnings
 
 
@@ -241,6 +315,7 @@ def main():
                 if not value.strip():
                     raise ValueError(f"{field}不能为空")
                 record[field] = value
+            record["hiring_priorities"]["role_version"] = record["role_version"]
             args.path.parent.mkdir(parents=True, exist_ok=True)
             with args.path.open("x", encoding="utf-8") as stream:
                 json.dump(record, stream, ensure_ascii=False, indent=2)
