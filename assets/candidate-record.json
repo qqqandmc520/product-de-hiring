@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0",
+  "candidate_id": "",
+  "role_id": "",
+  "role_version": "",
+  "model_version": "general-v0.2_p1-v1.1_p2-p7-v1.0_2026-08-31",
+  "sources": [],
+  "evidence": [],
+  "capabilities": {
+    "P1": {"status": "unobserved", "evidence_ids": [], "rationale": "", "opportunity": "", "follow_up": ""},
+    "P2": {"status": "unobserved", "evidence_ids": [], "rationale": "", "opportunity": "", "follow_up": ""},
+    "P3": {"status": "unobserved", "evidence_ids": [], "rationale": "", "opportunity": "", "follow_up": ""},
+    "P4": {"status": "unobserved", "evidence_ids": [], "rationale": "", "opportunity": "", "follow_up": ""},
+    "P5": {"status": "unobserved", "evidence_ids": [], "rationale": "", "opportunity": "", "follow_up": ""},
+    "P6": {"status": "unobserved", "evidence_ids": [], "rationale": "", "opportunity": "", "follow_up": ""},
+    "P7": {"status": "unobserved", "evidence_ids": [], "rationale": "", "opportunity": "", "follow_up": ""}
+  },
+  "role_requirements": [],
+  "decisions": [],
+  "interview_plan": null,
+  "history": []
+}
