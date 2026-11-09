@@ -177,10 +177,10 @@ class LedgerChecks(unittest.TestCase):
 
     def test_business_only_core_does_not_verify_product_fit(self):
         result = record()
-        result["role_requirements"] = [{"id": "R:growth", "status": "unobserved", "evidence_ids": [], "follow_up": "另验"}]
+        result["role_requirements"] = [{"id": "R:extra", "status": "unobserved", "evidence_ids": [], "follow_up": "另验"}]
         requirement(result)
-        result["hiring_priorities"]["requirements"][0]["capabilities"] = ["R:growth"]
-        evidence(result, tag="R:growth")
+        result["hiring_priorities"]["requirements"][0]["capabilities"] = ["R:extra"]
+        evidence(result, tag="R:extra")
         assessment(result)
         result["role_fit"]["product_fit"] = {"status": "supported", "evidence_ids": ["E1"], "rationale": "误用增长证据"}
         self.assertTrue(any("不能只引用独立业务" in e for e in check(result)[0]))

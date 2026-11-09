@@ -1,4 +1,4 @@
 interface:
   display_name: "产品领域专家招聘全流程"
   short_description: "贯通简历筛选、面试准备、面后评估与JD修订，统一产品能力证据和判断口径"
-  default_prompt: "使用 $product-de-hiring，根据已有材料与少量必要选项明确产品/业务边界及核心、其他必需、可培养、加分要求，贯通当前招聘环节，给出按最低表现核对的证据、阶段建议与未知。"
+  default_prompt: "使用 $product-de-hiring，从我提供的产品背景、JD或少量必要引导形成当前岗位要求，明确产品/业务边界及要求分层，完成当前招聘环节并给出证据、阶段建议与未知。"

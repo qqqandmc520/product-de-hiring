@@ -1,4 +1,4 @@
-# 共用证据与判断口径（招聘应用v0.4；沿用四类证据状态）
+# 共用证据与判断口径（招聘应用v0.4.1；沿用四类证据状态）
 
 ## 最小记录
 
@@ -10,9 +10,9 @@
 - 核验：`unverified`未独立核实、`corroborated`多材料相互支持、`verified`经实际材料/数据核实，并注明核实范围。证据多不等于独立来源多。
 - 提问方式：`independent`自主展开、`neutral_probe`中性追问后、`leading`面试官给出关键解法后、`not_applicable`。提示后认同不能当作候选人独立发现；理解提示后的迁移仍可单独观察。
 - 项目状态：`shipped`已上线、`pilot`试点、`planned`规划、`hypothetical`假设、`unknown`不明。不要把规划收益当实绩，也不要因未上线自动判定能力不足。
-- 能力标签：P1–P7；额外任职要求用`R:`前缀，例如`R:growth`。一条证据可相关多项，但每项须解释具体支持范围。
+- 能力标签：P1–P7；额外任职要求用`R:`前缀，例如`R:extra`，名称与范围由本岗实际职责决定。一条证据可相关多项，但每项须解释具体支持范围。
 
-岗位额外要求表同样记证据、缺口和状态；不要只评七项而漏掉用户明确的DAU等职责。一个真实项目的多条证据不意味着有多个独立案例。
+岗位额外要求表同样记证据、缺口和状态；不要只评七项而漏掉用户明确的独立职责；未提出的职责不自动增加。一个真实项目的多条证据不意味着有多个独立案例。
 
 ## 要求分层与证据分别接续
 
@@ -61,7 +61,7 @@
 
 每个重要结论写清：**材料位置 → 候选人做了/说了什么 → 为什么支持或不支持该能力 → 对当前岗位有什么影响 → 尚不能确定什么**。保留与结论相反的证据，说明权衡。事实和解释分栏或明确措辞区分。
 
-先说明实际问到哪里、追问是否中性、材料是否完整，再评能力。面试摘要中的“没有体验意识”“不够高级”等评语只是评价者观点，必须回到发言或作品。场景题没提供必要领域事实时，澄清问题或拒绝编造专业事实可为正向线索，不能按没有给出具体行程等直接扣分。
+先说明实际问到哪里、追问是否中性、材料是否完整，再评能力。面试摘要中的“没有体验意识”“不够高级”等评语只是评价者观点，必须回到发言或作品。场景题没提供必要领域事实时，澄清问题或拒绝编造专业事实可为正向线索，不能按没有编造专业方案直接扣分。
 
 - 简历：`invite`建议初试 / `pending_evidence`补最小信息后定 / `do_not_invite`当前不建议。拒绝须基于已明确、与岗位有关的条件或具体不匹配，不能只因简历没覆盖七项。
 - 面后：`advance`建议继续 / `supplement`先补关键证据 / `do_not_advance`当前不建议继续。每项注明理由、关键证据、反证、缺失与不确定性。`advance`不等于最终录用。
@@ -77,16 +77,16 @@
 
 ## JSON接续示例
 
-在空白记录中增补下列条目；这是虚构的格式示例，不能作为真实候选人证据。`direction`取`support`/`concern`/`neutral`。来源的`type`、`completeness`用可理解的短语描述；其余枚举沿用上文。`opportunity`描述实际观察机会，不能复制面试计划冒充实际提问。`rationale`中保留判断解释和反证；决策的`uncertainty`明确未知。
+在空白记录中增补下列条目；这是无行业设定的虚构格式示例，不是预置岗位、题库或核心要求，不能作为真实候选人证据。`direction`取`support`/`concern`/`neutral`。来源的`type`、`completeness`用可理解的短语描述；其余枚举沿用上文。`opportunity`描述实际观察机会，不能复制面试计划冒充实际提问。`rationale`中保留判断解释和反证；决策的`uncertainty`明确未知。
 
 ```json
 {
   "source_example": {"id": "S1", "name": "C001_面试纪要", "type": "面试转写", "completeness": "仅有第12–24分钟，其他部分缺失"},
-  "evidence_example": {"id": "E1", "source_id": "S1", "locator": "12:10", "fact": "说明补附件不重建采购单，改金额后按规则判断是否重审", "speaker": "候选人", "kind": "scenario_response", "verification": "unverified", "prompting": "independent", "delivery": "hypothetical", "capabilities": ["P1"], "direction": "support"},
-  "capability_example": {"status": "partial", "evidence_ids": ["E1"], "rationale": "能说明对象和变化规则，尚缺完整范围及实际落地证据", "opportunity": "给出采购任务后自主展开", "follow_up": "核实真实案例中规则取舍与上线结果"},
-  "role_requirement_example": {"id": "R:delivery", "name": "跨团队交付", "status": "unobserved", "evidence_ids": [], "rationale": "", "opportunity": "当前片段未问", "follow_up": "核实一次资源冲突中的本人决策及交付结果"},
-  "decision_example": {"stage": "post_interview", "date": "2026-11-09", "role_version": "v1", "verdict": "supplement", "evidence_ids": ["E1"], "rationale": "有产品逻辑线索，关键行为闭环及交付证据不足", "uncertainty": "当前只有部分纪要，不能据此判其未展示项不足"},
-  "interview_plan_example": {"duration_minutes": 60, "segments": [{"title": "开场", "minutes": 4, "capabilities": []}, {"title": "案例走查", "minutes": 20, "capabilities": ["P1", "P2", "P3", "P4", "P5", "P6", "P7"]}, {"title": "岗位场景", "minutes": 16, "capabilities": ["P1", "P5", "P6"]}, {"title": "交付", "minutes": 10, "capabilities": ["R:delivery"]}, {"title": "补证", "minutes": 6, "capabilities": []}, {"title": "候选人提问", "minutes": 4, "capabilities": []}]}
+  "evidence_example": {"id": "E1", "source_id": "S1", "locator": "12:10", "fact": "说明同一任务中的对象身份与变化规则，区分已知事实和待核条件", "speaker": "候选人", "kind": "scenario_response", "verification": "unverified", "prompting": "independent", "delivery": "hypothetical", "capabilities": ["P1"], "direction": "support"},
+  "capability_example": {"status": "partial", "evidence_ids": ["E1"], "rationale": "能说明对象和变化规则，尚缺完整范围及实际落地证据", "opportunity": "给出虚构任务后自主展开", "follow_up": "核实真实案例中规则取舍与上线结果"},
+  "role_requirement_example": {"id": "R:extra", "name": "使用方另行明确的职责（仅格式示例）", "status": "unobserved", "evidence_ids": [], "rationale": "", "opportunity": "当前片段未问", "follow_up": "按使用方明确的职责设计验证任务；未要求则不添加此项"},
+  "decision_example": {"stage": "post_interview", "date": "2026-11-09", "role_version": "v1", "verdict": "supplement", "evidence_ids": ["E1"], "rationale": "有产品逻辑线索，本岗已明确的关键任务仍有证据不足", "uncertainty": "当前只有部分纪要，不能据此判其未展示项不足"},
+  "interview_plan_example": {"duration_minutes": 60, "segments": [{"title": "开场", "minutes": 4, "capabilities": []}, {"title": "案例走查", "minutes": 20, "capabilities": ["P1", "P2", "P3", "P4", "P5", "P6", "P7"]}, {"title": "岗位场景", "minutes": 16, "capabilities": ["P1", "P5", "P6"]}, {"title": "当前岗位关键未知补证", "minutes": 10, "capabilities": []}, {"title": "补证", "minutes": 6, "capabilities": []}, {"title": "候选人提问", "minutes": 4, "capabilities": []}]}
 }
 ```
 
