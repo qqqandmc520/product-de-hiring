@@ -1,0 +1,20 @@
+{
+  "snapshot_date": "2026-11-09",
+  "model_version": "general-v0.2_p1-v1.1_p2-p7-v1.0_2026-08-31",
+  "pages": 313,
+  "provenance": "产品领域专家项目现行汇编；阅读版转录同一原始PDF，正式定义以原PDF及已核实的有效修订为准。",
+  "files": [
+    {
+      "file": "product-de-model.md",
+      "original_name": "产品领域专家能力要求模型_完整版_最新.md",
+      "bytes": 827124,
+      "sha256": "a20d8eaac40a858af8fdd847834febcc3b5fb2b5372dd7b0bc319d9a67a3dde4"
+    },
+    {
+      "file": "product-de-model.pdf",
+      "original_name": "产品领域专家能力要求模型_完整版_最新.pdf",
+      "bytes": 15730622,
+      "sha256": "cdbdeb31dc033d004cf1ed4958000a13b5a03f35976b874151ba3df90833a447"
+    }
+  ]
+}
