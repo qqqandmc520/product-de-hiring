@@ -16,6 +16,14 @@
     "P7": {"status": "unobserved", "evidence_ids": [], "rationale": "", "opportunity": "", "follow_up": ""}
   },
   "role_requirements": [],
+  "role_fit": {
+    "role_orientation": "undetermined",
+    "role_basis": "",
+    "candidate_evidence_focus": "insufficient",
+    "product_fit": {"status": "unobserved", "evidence_ids": [], "rationale": ""},
+    "domain_fit": {"status": "unobserved", "evidence_ids": [], "rationale": ""},
+    "scope_note": ""
+  },
   "decisions": [],
   "interview_plan": null,
   "history": []
