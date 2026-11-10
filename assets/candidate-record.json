@@ -7,13 +7,13 @@
   "sources": [],
   "evidence": [],
   "capabilities": {
-    "P1": {"status": "unobserved", "evidence_ids": [], "rationale": "", "opportunity": "", "follow_up": ""},
-    "P2": {"status": "unobserved", "evidence_ids": [], "rationale": "", "opportunity": "", "follow_up": ""},
-    "P3": {"status": "unobserved", "evidence_ids": [], "rationale": "", "opportunity": "", "follow_up": ""},
-    "P4": {"status": "unobserved", "evidence_ids": [], "rationale": "", "opportunity": "", "follow_up": ""},
-    "P5": {"status": "unobserved", "evidence_ids": [], "rationale": "", "opportunity": "", "follow_up": ""},
-    "P6": {"status": "unobserved", "evidence_ids": [], "rationale": "", "opportunity": "", "follow_up": ""},
-    "P7": {"status": "unobserved", "evidence_ids": [], "rationale": "", "opportunity": "", "follow_up": ""}
+    "P1": {"status": "unobserved", "evidence_ids": [], "rationale": "", "opportunity": "", "follow_up": "", "evidence_links": []},
+    "P2": {"status": "unobserved", "evidence_ids": [], "rationale": "", "opportunity": "", "follow_up": "", "evidence_links": []},
+    "P3": {"status": "unobserved", "evidence_ids": [], "rationale": "", "opportunity": "", "follow_up": "", "evidence_links": []},
+    "P4": {"status": "unobserved", "evidence_ids": [], "rationale": "", "opportunity": "", "follow_up": "", "evidence_links": []},
+    "P5": {"status": "unobserved", "evidence_ids": [], "rationale": "", "opportunity": "", "follow_up": "", "evidence_links": []},
+    "P6": {"status": "unobserved", "evidence_ids": [], "rationale": "", "opportunity": "", "follow_up": "", "evidence_links": []},
+    "P7": {"status": "unobserved", "evidence_ids": [], "rationale": "", "opportunity": "", "follow_up": "", "evidence_links": []}
   },
   "role_requirements": [],
   "hiring_priorities": {
@@ -25,11 +25,21 @@
     "role_orientation": "undetermined",
     "role_basis": "",
     "candidate_evidence_focus": "insufficient",
-    "product_fit": {"status": "unobserved", "evidence_ids": [], "rationale": ""},
-    "domain_fit": {"status": "unobserved", "evidence_ids": [], "rationale": ""},
+    "product_fit": {
+      "status": "unobserved",
+      "evidence_ids": [],
+      "rationale": ""
+    },
+    "domain_fit": {
+      "status": "unobserved",
+      "evidence_ids": [],
+      "rationale": ""
+    },
     "scope_note": ""
   },
   "decisions": [],
   "interview_plan": null,
-  "history": []
+  "history": [],
+  "recruiting_status": "",
+  "identity_notes": []
 }

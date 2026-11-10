@@ -53,6 +53,21 @@ def decision(result, verdict="invite"):
     }]
 
 
+def screening_context(result, priority="first_batch"):
+    result["decisions"][0]["screening_context"] = {
+        "decision_version": "s1", "scope": "只据本轮原始简历判断是否值得初试",
+        "priority": priority, "priority_reason": "本批核心相关的本人判断线索较具体",
+    }
+
+
+def evidence_link(result):
+    result["hiring_priorities"]["assessments"][0]["evidence_links"] = [{
+        "evidence_id": "E1", "relation": "transferable",
+        "rationale": "相同用户动作需要确认生效范围，具有可迁移的判断任务",
+        "limit": "只支持操作闭环线索，未证实本岗具体业务知识及落地结果",
+    }]
+
+
 class LedgerChecks(unittest.TestCase):
     def test_legacy_records_preserve_content(self):
         result = record()
@@ -184,6 +199,117 @@ class LedgerChecks(unittest.TestCase):
         assessment(result)
         result["role_fit"]["product_fit"] = {"status": "supported", "evidence_ids": ["E1"], "rationale": "误用增长证据"}
         self.assertTrue(any("不能只引用独立业务" in e for e in check(result)[0]))
+
+    def test_each_evidence_link_must_explain_its_own_scope(self):
+        result = record()
+        requirement(result)
+        evidence(result)
+        assessment(result)
+        evidence_link(result)
+        self.assertEqual(check(result)[0], [])
+        del result["hiring_priorities"]["assessments"][0]["evidence_links"][0]["limit"]
+        self.assertTrue(any("关联解释limit" in e for e in check(result)[0]))
+
+    def test_shared_tag_cannot_bypass_missing_per_evidence_explanation(self):
+        result = record()
+        requirement(result)
+        evidence(result)
+        assessment(result)
+        evidence_link(result)
+        second = copy.deepcopy(result["evidence"][0])
+        second["id"] = "E2"
+        result["evidence"].append(second)
+        result["hiring_priorities"]["assessments"][0]["evidence_ids"].append("E2")
+        self.assertTrue(any("逐条解释全部" in e for e in check(result)[0]))
+
+    def test_links_cannot_borrow_unselected_evidence(self):
+        result = record()
+        requirement(result)
+        evidence(result)
+        assessment(result)
+        evidence_link(result)
+        result["hiring_priorities"]["assessments"][0]["evidence_links"][0]["evidence_id"] = "E2"
+        self.assertTrue(any("须引用本评估" in e for e in check(result)[0]))
+
+    def test_legacy_links_warn_without_changing_assessment(self):
+        result = record()
+        requirement(result)
+        evidence(result)
+        assessment(result)
+        before = copy.deepcopy(result)
+        errors, warnings = check(result)
+        self.assertEqual(errors, [])
+        self.assertTrue(any("语义支持" in w for w in warnings))
+        self.assertEqual(result, before)
+
+    def test_recruiting_progress_does_not_change_resume_verdict(self):
+        result = record()
+        requirement(result)
+        evidence(result)
+        assessment(result)
+        decision(result)
+        screening_context(result)
+        for progress in ("", "已初试", "待排期"):
+            result["recruiting_status"] = progress
+            before = copy.deepcopy(result)
+            self.assertEqual(check(result)[0], [])
+            self.assertEqual(result, before)
+            self.assertEqual(result["decisions"][0]["verdict"], "invite")
+
+    def test_filename_difference_is_a_note_not_rejection(self):
+        result = record()
+        evidence(result)
+        decision(result)
+        result["decisions"][0].pop("requirement_ids")
+        screening_context(result)
+        result["identity_notes"] = ["文件名为候选人甲，简历署名为候选人乙，同份材料保留两者"]
+        self.assertEqual(check(result)[0], [])
+        self.assertEqual(result["decisions"][0]["verdict"], "invite")
+
+    def test_priority_cannot_contradict_resume_recommendation(self):
+        result = record()
+        evidence(result)
+        decision(result)
+        result["decisions"][0].pop("requirement_ids")
+        screening_context(result, priority="not_priority")
+        self.assertTrue(any("梯队与简历建议冲突" in e for e in check(result)[0]))
+
+    def test_insufficient_signal_is_not_forced_to_gap(self):
+        result = record()
+        requirement(result)
+        evidence(result)
+        assessment(result)
+        decision(result, verdict="do_not_invite")
+        screening_context(result, priority="not_priority")
+        result["decisions"][0]["screening_context"]["negative_basis"] = "insufficient_signal"
+        self.assertEqual(check(result)[0], [])
+        self.assertEqual(result["hiring_priorities"]["assessments"][0]["status"], "partial")
+
+    def test_pending_needs_an_explicit_obstacle(self):
+        result = record()
+        decision(result, verdict="pending_evidence")
+        result["decisions"][0].update(evidence_ids=[], requirement_ids=[])
+        screening_context(result, priority="undetermined")
+        self.assertTrue(any("pending_reason" in e for e in check(result)[0]))
+        result["decisions"][0]["screening_context"]["pending_reason"] = "唯一简历不可读，需可读版本"
+        self.assertEqual(check(result)[0], [])
+
+    def test_scope_revision_keeps_role_version_and_old_decision(self):
+        result = record()
+        requirement(result)
+        evidence(result)
+        assessment(result)
+        decision(result)
+        screening_context(result)
+        original = copy.deepcopy(result["decisions"][0])
+        revision = copy.deepcopy(original)
+        revision["screening_context"].update(decision_version="s2", scope="增加批量比较，岗位和证据不变", priority="consider")
+        result["decisions"].append(revision)
+        before = copy.deepcopy(result)
+        self.assertEqual(check(result)[0], [])
+        self.assertEqual(result, before)
+        self.assertEqual(result["decisions"][0], original)
+        self.assertEqual({d["role_version"] for d in result["decisions"]}, {"v1"})
 
 
 if __name__ == "__main__":

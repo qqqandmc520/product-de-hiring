@@ -1,4 +1,4 @@
-# 共用证据与判断口径（招聘应用v0.4.1；沿用四类证据状态）
+# 共用证据与判断口径（招聘应用v0.4.2；沿用四类证据状态）
 
 ## 最小记录
 
@@ -20,7 +20,8 @@
 
 - `role_version`：对应当前岗位画像版本；不能将新版标准无声套入旧记录。
 - `requirements`：同岗同版共享的要求快照，每项含 `id`（H:）、`name`、`level`（core/required/developable/bonus）、`capabilities`（关联P1–P7或已定义R:）、`reason`（层级理由）、`minimum`（最低可接受表现）、`verification`（验证任务/证据）、`basis`（岗位来源及暂定说明）。可培养项另记 `development_plan`：支持资源、节点、验收和未补齐影响；尚待确认须说明，不编承诺。
-- `assessments`：本候选人本轮的逐要求判断，每项含 `requirement_id`、`status`、`evidence_ids`、`rationale`、`opportunity`、`follow_up`。沿用四类状态，引用证据须与该要求关联的P/R至少一项相符；人工仍须判断证据是否支持完整最低表现，不因标签相符自动支持。`rationale`说明反证及对当前阶段建议的影响。
+- `assessments`：本候选人本轮的逐要求判断，每项含 `requirement_id`、`status`、`evidence_ids`、`rationale`、`opportunity`、`follow_up`。沿用四类状态，引用证据须与该要求关联的P/R至少一项相符；标签仅用于结构检查，不得据标签交集自动生成证据关联；逐要求筛选真正相关的事实，人工解释支持范围，不因标签相符自动支持。`rationale`说明反证及对当前阶段建议的影响。
+- 新增评估的证据关联写 `evidence_links`：逐条含 `evidence_id`、`relation`（`direct`直接相关 / `transferable`可迁移）、`rationale`（本人动作为何支持当前具体要求）、`limit`（未覆盖、尚待核实或迁移边界）。可用于P/R评估及H:逐要求评估；不能支持的证据不挂接，未观察仍用原四类状态，不增加“弱相关”状态。已有 `evidence_ids` 保留，关联解释与其逐条对应；旧记录缺此字段只提醒人工补解释，不追溯补造。
 - 当前 `decisions` 可用 `requirement_ids` 关联决定性H:要求；`interview_plan.segments` 可用同字段关联观察任务。一段内的多个要求不重复计时；标了ID不代表深度足够或已经观察。
 
 示例为虚构片段，仅说明结构：
@@ -33,7 +34,7 @@
 }
 ```
 
-该对象放入 `hiring_priorities`，不替代七项及独立要求评估。旧记录没有此字段只提醒接续，不自动补写历史优先级。检查器校验版本、枚举、ID、证据引用和时间合计，对否定建议只关联可培养/加分、核心未安排等发人工复核提醒，不自动改变去留、不要求所有核心supported，也不能判断实际提问深度是否充分。
+该对象放入 `hiring_priorities`，不替代七项及独立要求评估。旧记录没有此字段只提醒接续，不自动补写历史优先级。检查器校验版本、枚举、ID、逐条关联的覆盖与解释字段和时间合计，对否定建议只关联可培养/加分、核心未安排等发人工复核提醒，不自动改变去留、不要求所有核心supported，也不能判断实际提问深度是否充分。
 
 ## 岗位属性与产品核心适配记录
 
@@ -63,11 +64,19 @@
 
 先说明实际问到哪里、追问是否中性、材料是否完整，再评能力。面试摘要中的“没有体验意识”“不够高级”等评语只是评价者观点，必须回到发言或作品。场景题没提供必要领域事实时，澄清问题或拒绝编造专业事实可为正向线索，不能按没有编造专业方案直接扣分。
 
-- 简历：`invite`建议初试 / `pending_evidence`补最小信息后定 / `do_not_invite`当前不建议。拒绝须基于已明确、与岗位有关的条件或具体不匹配，不能只因简历没覆盖七项。
+- 简历：`invite`建议初试 / `do_not_invite`暂不建议；`pending_evidence`仅用于材料不可读、归属无法确定、关键岗位标准冲突等真正阻碍判断的例外。默认据现有简历决策，贡献未核实或七项未覆盖通常留到初试验证，不自动要求先补材料。暂不建议须区分明确不匹配与当前核心信号不足，不能把后者描述为能力缺口；详见 `screening.md`。
 - 面后：`advance`建议继续 / `supplement`先补关键证据 / `do_not_advance`当前不建议继续。每项注明理由、关键证据、反证、缺失与不确定性。`advance`不等于最终录用。
 - 关键能力若未观察而会改变去留，优先说明最小补面/作品走查；已有独立且充分的关键不匹配时可以给否定建议，同时明确其他项仍未知。
 - 共同基线保持一致；能力重点、最低可接受表现和业务门槛必须来自岗位画像，不在看到某位候选人后临时加码。不得用“所有项都必须supported”作为跨岗位通用淘汰线。
 - 不输出伪精确概率、综合平均分、从头衔推职级或无限拔高理想型。批量比较时使用同版画像；版本不同则注明比较范围。
+
+## 简历决策与招聘进度分开接续
+
+新筛选决策在 `decisions` 条目中增补可选兼容对象 `screening_context`：`decision_version`、`scope`（本轮材料与决策范围）；批量另含 `priority`（`first_batch` / `consider` / `not_priority` / `undetermined`）及 `priority_reason`。单人无需相对梯队。`do_not_invite`另写`negative_basis`（`known_mismatch` / `insufficient_signal`），`pending_evidence`另写`pending_reason`，具体障碍与最小补充仍在理由中说明。逐要求证据仍在评估项解释，不用此对象代替。
+
+根层可选 `recruiting_status` 只记实际进度，`identity_notes` 只记姓名、文件名及归属备注；未知不推定，也不作能力标签。它们与简历建议分别维护。旧记录没有这些字段仍可读取；新增筛选决策时填写，不重写历史决策。岗位标准不变而范围/排序变化，只增加筛选判断版本，并在 `history` 解释变化依据；更新最新汇总及详细报告，历史版注明替代关系。
+
+检查器只检结构与梯队/建议是否冲突；即使逐条解释字段齐全，也不能证明语义相关、迁移成立、排序合理或来源真实，仍须回读材料人工复核。招聘进度不能决定简历建议，检查器不会按流程状态自动重排或改判。
 
 ## 一致性如何建立
 
@@ -83,7 +92,7 @@
 {
   "source_example": {"id": "S1", "name": "C001_面试纪要", "type": "面试转写", "completeness": "仅有第12–24分钟，其他部分缺失"},
   "evidence_example": {"id": "E1", "source_id": "S1", "locator": "12:10", "fact": "说明同一任务中的对象身份与变化规则，区分已知事实和待核条件", "speaker": "候选人", "kind": "scenario_response", "verification": "unverified", "prompting": "independent", "delivery": "hypothetical", "capabilities": ["P1"], "direction": "support"},
-  "capability_example": {"status": "partial", "evidence_ids": ["E1"], "rationale": "能说明对象和变化规则，尚缺完整范围及实际落地证据", "opportunity": "给出虚构任务后自主展开", "follow_up": "核实真实案例中规则取舍与上线结果"},
+  "capability_example": {"status": "partial", "evidence_ids": ["E1"], "rationale": "能说明对象和变化规则，尚缺完整范围及实际落地证据", "opportunity": "给出虚构任务后自主展开", "follow_up": "核实真实案例中规则取舍与上线结果", "evidence_links": [{"evidence_id": "E1", "relation": "direct", "rationale": "现场明确对象身份与合法变化，对应P1产品事实判断", "limit": "只覆盖该任务片段，未证实完整产品逻辑及实际落地"}]},
   "role_requirement_example": {"id": "R:extra", "name": "使用方另行明确的职责（仅格式示例）", "status": "unobserved", "evidence_ids": [], "rationale": "", "opportunity": "当前片段未问", "follow_up": "按使用方明确的职责设计验证任务；未要求则不添加此项"},
   "decision_example": {"stage": "post_interview", "date": "2026-11-09", "role_version": "v1", "verdict": "supplement", "evidence_ids": ["E1"], "rationale": "有产品逻辑线索，本岗已明确的关键任务仍有证据不足", "uncertainty": "当前只有部分纪要，不能据此判其未展示项不足"},
   "interview_plan_example": {"duration_minutes": 60, "segments": [{"title": "开场", "minutes": 4, "capabilities": []}, {"title": "案例走查", "minutes": 20, "capabilities": ["P1", "P2", "P3", "P4", "P5", "P6", "P7"]}, {"title": "岗位场景", "minutes": 16, "capabilities": ["P1", "P5", "P6"]}, {"title": "当前岗位关键未知补证", "minutes": 10, "capabilities": []}, {"title": "补证", "minutes": 6, "capabilities": []}, {"title": "候选人提问", "minutes": 4, "capabilities": []}]}

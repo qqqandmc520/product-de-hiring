@@ -30,6 +30,13 @@ def check(record):
         error("不支持的schema_version")
     if record.get("model_version") != MODEL:
         error("模型版本与技能快照不符，请先核对版本，不要自动改写旧记录")
+    if "recruiting_status" in record and not isinstance(record["recruiting_status"], str):
+        error("recruiting_status须为流程备注文本，不代替能力判断")
+    if "identity_notes" in record and (
+        not isinstance(record["identity_notes"], list)
+        or any(not isinstance(note, str) for note in record["identity_notes"])
+    ):
+        error("identity_notes须为材料归属备注列表")
 
     def index(items, collection):
         result = {}
@@ -101,6 +108,33 @@ def check(record):
                 error(f"{tag}引用不存在的证据：{eid}")
             elif not set(matching_tags or [tag]).intersection(evidence[eid].get("capabilities", [])):
                 error(f"{tag}引用证据{eid}但证据未标注该能力/要求")
+        # Explanations are per assessment: a shared tag is not semantic proof.
+        links = item.get("evidence_links")
+        if links is None:
+            if refs:
+                warnings.append(f"{tag}缺少逐条evidence_links解释；标签相符不代表语义支持，须人工复核")
+        elif not isinstance(links, list):
+            error(f"{tag}的evidence_links须为列表")
+        else:
+            linked_ids = set()
+            for link in links:
+                if not isinstance(link, dict):
+                    error(f"{tag}逐条证据关联须为对象")
+                    continue
+                eid = link.get("evidence_id")
+                if not isinstance(eid, str) or eid not in refs:
+                    error(f"{tag}逐条关联须引用本评估的evidence_ids")
+                    continue
+                if eid in linked_ids:
+                    error(f"{tag}重复解释同一证据：{eid}")
+                linked_ids.add(eid)
+                if link.get("relation") not in {"direct", "transferable"}:
+                    error(f"{tag}证据{eid}的relation须为direct或transferable")
+                for field in ("rationale", "limit"):
+                    if not nonempty(link.get(field)):
+                        error(f"{tag}证据{eid}缺少关联解释{field}")
+            if linked_ids != set(refs):
+                error(f"{tag}须逐条解释全部引用证据，不能按共同标签批量挂接")
         linked = [evidence[e] for e in refs if e in evidence]
         if status != "unobserved":
             if not linked or not nonempty(item.get("rationale")):
@@ -238,6 +272,32 @@ def check(record):
             continue
         if decision.get("verdict") not in verdicts.get(decision.get("stage"), set()):
             error("决策stage/verdict不匹配")
+        if decision.get("stage") == "screening":
+            context = decision.get("screening_context")
+            if context is None:
+                warnings.append("旧筛选决策未含screening_context；接续时记录范围与判断版本，不改写历史结论")
+            elif not isinstance(context, dict):
+                error("screening_context须为对象")
+            else:
+                for field in ("decision_version", "scope"):
+                    if not nonempty(context.get(field)):
+                        error(f"screening_context缺少{field}")
+                if "priority" in context:
+                    allowed_verdicts = {
+                        "first_batch": "invite", "consider": "invite",
+                        "not_priority": "do_not_invite", "undetermined": "pending_evidence",
+                    }
+                    priority = context["priority"]
+                    if not isinstance(priority, str) or priority not in allowed_verdicts:
+                        error("screening_context推荐梯队无效")
+                    elif decision.get("verdict") != allowed_verdicts[priority]:
+                        error("推荐梯队与简历建议冲突；容量及招聘进度不应改写适配判断")
+                    if not nonempty(context.get("priority_reason")):
+                        error("推荐梯队须说明priority_reason，不按标签数自动排序")
+                if decision.get("verdict") == "do_not_invite" and context.get("negative_basis") not in {"known_mismatch", "insufficient_signal"}:
+                    error("暂不建议须区分known_mismatch与insufficient_signal")
+                if decision.get("verdict") == "pending_evidence" and not nonempty(context.get("pending_reason")):
+                    error("暂无法判断须说明具体pending_reason，不默认索要补充作业")
         for field in ("date", "role_version", "rationale", "uncertainty"):
             if not nonempty(decision.get(field)):
                 error(f"决策缺少{field}")
